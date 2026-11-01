@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LabSpotter - AI lab-run review</title>
+<meta name="description" content="LabSpotter classifies lab clips with a video model and shows every prediction beside the footage, so a person can see what the model called each step and where it disagrees with the label.">
+<style>
+@font-face { font-family:'LSG'; src:url('SpaceGrotesk.ttf'); }
+@font-face { font-family:'LMono'; src:url('IBMPlexMono-Medium.ttf'); font-weight:500; }
+:root { --paper:#F5F4F0; --ink:#101214; --ink2:#5A5E61; --hair:rgba(16,18,20,.14); --green:#0E9F5D; --greenink:#0A7A48; --amber:#E0932F; --ambert:#A34B00; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter,system-ui,-apple-system,sans-serif; font-size:16px; line-height:1.55; }
+.wrap { max-width:1060px; margin:0 auto; padding:0 20px 64px; }
+.hero { background:var(--ink); color:var(--paper); border-radius:10px; padding:26px 22px; margin-top:28px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.hero .wm { font-family:'LSG',sans-serif; font-weight:600; font-size:30px; letter-spacing:-0.01em; }
+.hero .kick { font-family:'LMono',monospace; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:rgba(245,244,240,.55); margin-top:5px; }
+.hero .id { flex:1 1 auto; min-width:180px; }
+.chip { font-family:'LMono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; padding:6px 10px; border-radius:999px; border:1px solid rgba(245,244,240,.25); color:rgba(245,244,240,.75); }
+.chip.amber { border-color:rgba(224,147,47,.45); color:var(--amber); }
+h1 { font-family:'LSG',sans-serif; font-size:34px; margin:44px 0 8px; letter-spacing:-0.01em; }
+h2 { font-family:'LSG',sans-serif; font-size:22px; margin:40px 0 12px; letter-spacing:-0.01em; }
+.byline { color:var(--ink2); margin:0 0 20px; }
+.narr { font-size:17.5px; max-width:760px; }
+.narr p { margin:0 0 14px; }
+.sec { border-top:1px solid var(--hair); margin-top:36px; padding-top:8px; }
+video { width:100%; border-radius:10px; border:1px solid var(--hair); display:block; background:var(--ink); margin-top:14px; }
+.cap { color:var(--ink2); font-size:13.5px; margin:10px 0 0; max-width:820px; }
+.strip { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px; }
+.strip figure { margin:0; }
+.strip img { width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:6px; border:1px solid var(--hair); display:block; }
+.strip figcaption { font-family:'LMono',monospace; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink2); margin-top:4px; }
+.gallery { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+.gallery img { width:100%; border-radius:10px; border:1px solid var(--hair); display:block; }
+.facts { margin:14px 0 0; }
+.fact { display:grid; grid-template-columns:180px 1fr; gap:14px; padding:10px 0; border-top:1px solid var(--hair); }
+.fact:first-child { border-top:none; }
+.fact .k { font-family:'LMono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink2); padding-top:2px; }
+.fact .v b { font-weight:600; }
+.bars { margin:16px 0 4px; max-width:640px; }
+.bar { display:grid; grid-template-columns:150px 1fr 52px; gap:10px; align-items:center; margin:8px 0; font-size:14px; }
+.bar .track { background:rgba(16,18,20,.08); border-radius:4px; height:14px; overflow:hidden; }
+.bar .fill { height:100%; }
+.bar .num { font-family:'LMono',monospace; font-size:12px; text-align:right; }
+.warn { border-left:3px solid var(--amber); background:rgba(163,75,0,.06); padding:10px 14px; border-radius:0 8px 8px 0; margin-top:16px; font-size:14.5px; max-width:820px; }
+.note { border-left:3px solid var(--hair); padding:10px 14px; margin-top:16px; font-size:14.5px; max-width:820px; color:var(--ink); }
+.mono { font-family:'LMono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink2); }
+a { color:var(--greenink); }
+footer { margin-top:48px; padding-top:16px; border-top:1px solid var(--hair); color:var(--ink2); font-size:13px; }
+@media (max-width:700px) { .gallery { grid-template-columns:1fr; } .strip { grid-template-columns:repeat(2,1fr); } .fact { grid-template-columns:1fr; gap:2px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="id">
+      <div class="wm">LabSpotter</div>
+      <div class="kick">Recorded runs, reviewed clip by clip</div>
+    </div>
+    <span class="chip">Recorded run</span>
+    <span class="chip amber">Model-predicted, unvalidated</span>
+  </div>
+
+  <h1>AI lab-run review</h1>
+  <p class="byline">A project by Thomas Kim</p>
+  <div class="narr">
+    <p>I'm proud of LabSpotter.app, my attempt to make physical lab work legible to a machine. It watches a procedure, recognizes lab action and gives users clip-level predictions they can inspect, instead of a single opaque decision. I built it well past a concept: a React and Python video-upload and review pipeline backed by PyTorch and Hugging Face. I started with a logistic-regression head on frozen V-JEPA 2 video representations, then moved to fine-tuning V-JEPA 2's last four transformer blocks. On my latest source-separated evaluation of 300 clips, fine-tuning raised balanced accuracy from 56.9% to 62.7%. On a 506-clip pilot, one fold reached 96.2% training balanced accuracy. What I'm proudest of is the testing behind those numbers. I checked whether the model recognizes actual lab actions and not just the background footage, and I designed the UI to show where predictions disagree instead of hiding model failures.</p>
+  </div>
+
+  <div class="sec">
+    <h2>Recorded walkthrough</h2>
+    <video controls playsinline muted preload="metadata" poster="walkthrough_poster.png" src="walkthrough.mp4"></video>
+    <p class="cap">Recorded walkthrough of the current interface (38 s), captured 1 Nov 2026: a fixture clip plays on the Clips screen, then the Review queue walks the 8 IBM fixture clips, with local seen/flag marks. The upload flow needs the analysis server and is not shown; there is no public live demo.</p>
+  </div>
+
+  <div class="sec">
+    <h2>The fixture footage</h2>
+    <div class="strip">
+      <figure><img src="Add_step.jpg" alt="Lab footage still: Add"><figcaption>Add</figcaption></figure>
+      <figure><img src="AnalyticalMeasurement_step.jpg" alt="Lab footage still: Analytical Measurement"><figcaption>Analytical Measurement</figcaption></figure>
+      <figure><img src="CollectLayer_step.jpg" alt="Lab footage still: Collect Layer"><figcaption>Collect Layer</figcaption></figure>
+      <figure><img src="MeasureLiquid_step.jpg" alt="Lab footage still: Measure Liquid"><figcaption>Measure Liquid</figcaption></figure>
+      <figure><img src="MeasureSolid_step.jpg" alt="Lab footage still: Measure Solid"><figcaption>Measure Solid</figcaption></figure>
+      <figure><img src="No_action.jpg" alt="Lab footage still: No action"><figcaption>No action</figcaption></figure>
+      <figure><img src="PhaseSeparation_step.jpg" alt="Lab footage still: Phase Separation"><figcaption>Phase Separation</figcaption></figure>
+      <figure><img src="Stir_step.jpg" alt="Lab footage still: Stir"><figcaption>Stir</figcaption></figure>
+    </div>
+    <p class="cap">The recorded run's fixture footage: one testing-split clip per class from the IBM lab-actions dataset. These are the 8 clips the Review screen walks through.</p>
+  </div>
+
+  <div class="sec">
+    <h2>Results, with their limits</h2>
+    <div class="facts">
+      <div class="fact"><div class="k">Live app head</div><div class="v"><b>51.2% balanced accuracy</b> across 8 action classes - frozen logistic-regression head on V-JEPA 2 features, official validation split (229 clips, 5 sources). That split was used throughout development; it is not a fresh blind test.</div></div>
+      <div class="fact"><div class="k">Fine-tuning experiment</div><div class="v"><b>56.9% &rarr; 62.7% balanced accuracy</b> from fine-tuning the last four transformer blocks - a fixed development comparison: 300 clips, 80 sources, 4 source-grouped folds, one seed, 3 epochs. Development folds only, and the fine-tuned candidate is not deployed in the app.</div></div>
+      <div class="fact"><div class="k">Adaptation pilot</div><div class="v"><b>96.2% training balanced accuracy</b> on one fold of a 506-clip, 6-epoch pilot (other folds 95.5% / 92.4%). On held-out source groups the same runs reached 49.2% / 59.6% / 57.0% (pooled 55.8%) - the gap between the two numbers is the generalization problem the project is actually about.</div></div>
+    </div>
+    <div class="bars">
+      <div class="bar"><span>Frozen encoder</span><div class="track"><div class="fill" style="width:56.9%;background:#5A5E61"></div></div><span class="num">56.9%</span></div>
+      <div class="bar"><span>Fine-tuned encoder</span><div class="track"><div class="fill" style="width:62.7%;background:#0E9F5D"></div></div><span class="num">62.7%</span></div>
+    </div>
+    <p class="cap">Balanced accuracy, matched development folds, 300 clips.</p>
+    <div class="note"><b>How the evaluation works.</b> Source-disjoint splits: no recording source appears in both training and evaluation. 8 lab-action classes, none dropped. Hardest class: "No action" recall 20% frozen, 23% fine-tuned. A model fine-tuned on all 300 dev clips is trained but not yet scored. Numbers measured 1 Nov 2026.</div>
+  </div>
+
+  <div class="sec">
+    <h2>Interface: today and next</h2>
+    <div class="gallery">
+      <img src="ui_review_ledger.png" alt="New design concept: Review screen panel with clip number, prediction, confidence bars and mark-as-seen controls">
+      <img src="ui_run_panel.png" alt="New design concept: Run screen panel with session access, video choice and analysis steps">
+    </div>
+    <p class="cap">Design concepts for the new interface, accepted 1 Nov 2026: panels from the Review and Run screens. The working app classifies uploaded clips today with the earlier interface shown in the walkthrough above.</p>
+  </div>
+
+  <div class="sec">
+    <h2>Sources</h2>
+    <p class="cap"><a href="https://zenodo.org/records/14235875">Egocentric video clips of laboratory actions</a>, IBM Research - Zurich, Zenodo 2024. Training and evaluation footage, 8 action classes. Licence: CDLA-Permissive-2.0.<br>
+    <a href="https://github.com/facebookresearch/vjepa2">V-JEPA 2, Meta FAIR</a>. Self-supervised video encoder. Licence: MIT.</p>
+  </div>
+
+  <footer>
+    Screens and numbers captured 1 Nov 2026. Predictions are model-made and unvalidated; nothing here is a lab-safety claim. LabSpotter source code is private.
+  </footer>
+</div>
+</body>
+</html>
