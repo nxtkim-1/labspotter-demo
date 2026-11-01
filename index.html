@@ -81,7 +81,7 @@ footer { margin-top:48px; padding-top:16px; border-top:1px solid var(--hair); co
   <div class="sec">
     <h2>What I built</h2>
     <div class="featgrid">
-      <div class="card"><h3>End-to-end video pipeline</h3><p>Upload a clip and the analysis server runs the model, then saves the result under a run tag with predictions, still frames and full history. React front end, Python + PyTorch backend, V-JEPA 2 video features via Hugging Face.</p></div>
+      <div class="card"><h3>End-to-end video pipeline</h3><p>Upload a clip and the analysis server runs the model, then saves the run under a tag with predictions and still-frame evidence you can reopen later. React front end, Python + PyTorch backend, V-JEPA 2 video features via Hugging Face.</p></div>
       <div class="card"><h3>Eight lab-action classes</h3><p>Add, Analytical Measurement, Collect Layer, Measure Liquid, Measure Solid, No action, Phase Separation and Stir, learned from real egocentric lab footage (IBM Research - Zurich) and evaluated on source-separated splits.</p></div>
       <div class="card"><h3>Predictions beside the footage</h3><p>Every model call sits next to the exact clip it came from, with confidence, so anyone can see what the model saw and where it disagrees with the label. Failures are visible, never averaged away.</p></div>
       <div class="card"><h3>Detector overlays <span class="status prog">Experimental</span></h3><p>Real hand- and object-detection boxes rendered over the footage with a per-detector legend, so the review shows where in the frame the action happens.</p></div>
@@ -116,21 +116,21 @@ footer { margin-top:48px; padding-top:16px; border-top:1px solid var(--hair); co
     <div class="facts">
       <div class="fact"><div class="k">In the app today</div><div class="v"><b>51.2% balanced accuracy</b> across 8 action classes - the frozen logistic-regression head on V-JEPA 2 features, measured on 229 official validation clips from 5 recording sources. This is the split used throughout development, so it reads as a working baseline rather than a blind-test score.</div></div>
       <div class="fact"><div class="k">Fine-tuning gain</div><div class="v"><b>+5.8 points: 56.9% &rarr; 62.7% balanced accuracy</b> from fine-tuning V-JEPA 2's last four transformer blocks - a fixed development comparison across 300 clips, 80 sources, 4 source-grouped folds, 3 epochs. The fine-tuned candidate is trained and queued for scoring before it ships in the app.</div></div>
-      <div class="fact"><div class="k">The big signal</div><div class="v"><b>96.2% training balanced accuracy</b> on one fold of a 506-clip, 6-epoch adaptation pilot (other folds 95.5% / 92.4%). The same runs scored 49.2% / 59.6% / 57.0% on held-out source groups (pooled 55.8%): the model learns the actions, and closing the gap on footage from sources it has never seen is the research problem LabSpotter is built around.</div></div>
+      <div class="fact"><div class="k">The big signal</div><div class="v"><b>96.2% training balanced accuracy</b> on one fold of a 506-clip, 6-epoch adaptation pilot (other folds 95.5% / 92.4%). The same runs scored 49.2% / 59.6% / 57.0% on held-out source groups (pooled 55.8%): the model fits the training clips, and improving transfer to new recordings is the next research step, the problem LabSpotter is built around.</div></div>
     </div>
     <div class="bars">
       <div class="bar"><span>Frozen encoder</span><div class="track"><div class="fill" style="width:56.9%;background:#5A5E61"></div></div><span class="num">56.9%</span></div>
       <div class="bar"><span>Fine-tuned encoder</span><div class="track"><div class="fill" style="width:62.7%;background:#0E9F5D"></div></div><span class="num">62.7%</span></div>
     </div>
     <p class="cap">Balanced accuracy, matched development folds, 300 clips.</p>
-    <div class="note"><b>How I test.</b> Source-disjoint splits: no recording source appears in both training and evaluation, so the model can't pass by memorizing a bench. All 8 classes counted, none dropped. Hardest class today: "No action" (recall 20% frozen, 23% fine-tuned) - the clearest target for the next training round. Numbers measured 1 Nov 2026.</div>
+    <div class="note"><b>How I test.</b> Source-disjoint splits keep clips from the same recording out of both training and evaluation. All 8 classes counted, none dropped. Hardest class today: "No action" (recall 20% frozen, 23% fine-tuned) - the clearest target for the next training round. Numbers measured 1 Nov 2026.</div>
   </div>
 
   <div class="sec road">
     <h2>Where it's going</h2>
     <div class="facts">
-      <div class="fact"><div class="k">New interface <span class="status built">Built</span></div><div class="v">A rebuilt interface - light paper design, the colony mark, a review ledger and a numbered run flow - is implemented and passing 32 automated desktop and mobile checks. Panels below; rollout into the app is next.</div></div>
-      <div class="fact"><div class="k">Fine-tuned model <span class="status prog">Next</span></div><div class="v">The candidate trained on the full 300-clip development set is ready; scoring it on fresh-source footage comes first, then it replaces the frozen head in the app if the number holds.</div></div>
+      <div class="fact"><div class="k">New interface <span class="status built">Built</span></div><div class="v">A rebuilt interface - light paper design, the colony mark, a review ledger and a numbered run flow - is implemented and passing 32 automated front-end interaction checks on desktop and mobile. Real screenshots below; rollout into the app is next.</div></div>
+      <div class="fact"><div class="k">Fine-tuned model <span class="status prog">Next</span></div><div class="v">The candidate trained on the full 300-clip development set exists today. Next: evaluate it, keep improving performance on new recording sources, then integrate it into the app.</div></div>
       <div class="fact"><div class="k">Meta reasoning agent <span class="status prog">In progress</span></div><div class="v">A Meta-model agent that reviews runs in natural language: what happened, what looks off, what to redo. The standalone client works; wiring it into the app is under way.</div></div>
       <div class="fact"><div class="k">Blind-test evaluation <span class="status prog">Next</span></div><div class="v">A fully untouched source set reserved for final numbers, so the headline result is measured on footage the project has never developed against.</div></div>
       <div class="fact"><div class="k">Mac and iPhone <span class="status prog">Next</span></div><div class="v">Device testing of the browser app on Apple hardware.</div></div>
@@ -141,10 +141,10 @@ footer { margin-top:48px; padding-top:16px; border-top:1px solid var(--hair); co
   <div class="sec">
     <h2>The new interface</h2>
     <div class="gallery">
-      <img src="4-ui_review_ledger.png" alt="New interface: Review screen panel with clip number, prediction, confidence bars and mark-as-seen controls">
-      <img src="5-ui_run_panel.png" alt="New interface: Run screen panel with session access, video choice and analysis steps">
+      <img src="1-v2_clips_desktop.png" alt="Rebuilt LabSpotter interface, Clips view: fixture clip list, footage with clip-level prediction and confidence bars">
+      <img src="2-v2_review_desktop.png" alt="Rebuilt LabSpotter interface, Review queue: ledger of demo clips with predictions and local seen and flag marks">
     </div>
-    <p class="cap">Panels from the new interface (Nov 2026): the Review ledger and the numbered Run flow, now implemented and passing desktop and mobile checks. The walkthrough above shows the interface running in the app today.</p>
+    <p class="cap">The rebuilt interface running with the recorded fixture clips (1 Nov 2026): the Clips view with a clip-level prediction beside the footage, and the Review queue with the local-mark ledger. The in-app labels (recorded run, model-predicted) are part of the design.</p>
   </div>
 
   <div class="sec">
